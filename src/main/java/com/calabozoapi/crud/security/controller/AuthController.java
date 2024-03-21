@@ -67,17 +67,15 @@ public class AuthController {
 
         Set<Rol> roles = new HashSet<>();
 
-        Optional<Rol> userRoleOptional = rolService.getByRolNombre(RolNombre.ROLE_USER);
-        userRoleOptional.ifPresent(roles::add);
-
-        if (nuevoUsuario.getRoles().contains("admin")) {
-            Optional<Rol> adminRoleOptional = rolService.getByRolNombre(RolNombre.ROLE_ADMIN);
-            adminRoleOptional.ifPresent(roles::add);
-        }
-
-        // Verificar si el usuario tiene al menos un rol asignado
-        if (roles.isEmpty()) {
-            return new ResponseEntity<>(new Mensaje("No se especificaron roles para el usuario"), HttpStatus.BAD_REQUEST);
+        // Agregar el rol por defecto si no se especifica ninguno
+        if (nuevoUsuario.getRoles().isEmpty()) {
+            Optional<Rol> defaultRoleOptional = rolService.getByRolNombre(RolNombre.ROLE_USER);
+            defaultRoleOptional.ifPresent(roles::add);
+        } else {
+            for (String roleName : nuevoUsuario.getRoles()) {
+                Optional<Rol> roleOptional = rolService.getByRolNombre(RolNombre.valueOf(roleName.toUpperCase()));
+                roleOptional.ifPresent(roles::add);
+            }
         }
 
         usuario.setRoles(roles);
