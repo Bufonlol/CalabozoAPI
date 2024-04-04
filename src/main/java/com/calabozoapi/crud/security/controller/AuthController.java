@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -83,6 +84,51 @@ public class AuthController {
 
         return new ResponseEntity<>(new Mensaje("usuario guardado"), HttpStatus.CREATED);
     }
+
+    @PutMapping("/usuarios/{id}")
+    public ResponseEntity<?> actualizarUsuario(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return new ResponseEntity<>(new Mensaje("campos mal puestos o email inválido"), HttpStatus.BAD_REQUEST);
+
+        Optional<Usuario> usuarioOptional = usuarioService.getById(id);
+        if (!usuarioOptional.isPresent()) {
+            return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
+        }
+
+        Usuario usuario = usuarioOptional.get();
+
+        // Actualizar los campos del usuario con los nuevos valores
+        usuario.setNombre(nuevoUsuario.getNombre());
+        usuario.setNombreUsuario(nuevoUsuario.getNombreUsuario());
+        usuario.setEmail(nuevoUsuario.getEmail());
+        usuario.setPassword(passwordEncoder.encode(nuevoUsuario.getPassword()));
+
+        Set<Rol> roles = new HashSet<>();
+
+        // Agregar los roles del nuevo usuario
+        if (nuevoUsuario.getRoles().isEmpty()) {
+            Optional<Rol> defaultRoleOptional = rolService.getByRolNombre(RolNombre.ROLE_USER);
+            defaultRoleOptional.ifPresent(roles::add);
+        } else {
+            for (String roleName : nuevoUsuario.getRoles()) {
+                Optional<Rol> roleOptional = rolService.getByRolNombre(RolNombre.valueOf(roleName.toUpperCase()));
+                roleOptional.ifPresent(roles::add);
+            }
+        }
+
+        usuario.setRoles(roles);
+        usuarioService.save(usuario);
+
+        return new ResponseEntity<>(new Mensaje("Usuario actualizado correctamente"), HttpStatus.OK);
+    }
+
+
+    @GetMapping("/usuarios")
+    public ResponseEntity<List<Usuario>> listarUsuarios() {
+        List<Usuario> usuarios = usuarioService.list();
+        return new ResponseEntity<>(usuarios, HttpStatus.OK);
+    }
+
 
 
 
