@@ -108,11 +108,7 @@ public class AuthController {
 
 
     @PutMapping("/usuarios/{id}")
-    public ResponseEntity<?> actualizarUsuario(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return new ResponseEntity<>(new Mensaje("Campos mal puestos o email inválido"), HttpStatus.BAD_REQUEST);
-        }
-
+    public ResponseEntity<?> actualizarUsuario(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario) {
         if (!usuarioService.existsById(id)) {
             return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
         }
@@ -141,6 +137,7 @@ public class AuthController {
 
         return new ResponseEntity<>(new Mensaje("Usuario actualizado correctamente"), HttpStatus.OK);
     }
+
 
 
 
