@@ -88,6 +88,18 @@ public class AuthController {
         return new ResponseEntity<>(new Mensaje("usuario guardado"), HttpStatus.CREATED);
     }
 
+    @GetMapping("/usuarios/{id}")
+    public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable("id") Long id) {
+        Optional<Usuario> usuarioOptional = usuarioService.getById(id);
+        if (usuarioOptional.isPresent()) {
+            Usuario usuario = usuarioOptional.get();
+            return new ResponseEntity<>(usuario, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
+        }
+    }
+
+
     @PutMapping("/usuarios/{id}")
     public ResponseEntity<?> actualizarUsuario(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -97,6 +109,8 @@ public class AuthController {
         if (!usuarioService.existsById(id)) {
             return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
         }
+
+
 
         Usuario usuario = usuarioService.getById(id).get();
 
