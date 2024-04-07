@@ -110,8 +110,6 @@ public class AuthController {
             return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
         }
 
-
-
         Usuario usuario = usuarioService.getById(id).get();
 
         usuario.setNombre(nuevoUsuario.getNombre());
