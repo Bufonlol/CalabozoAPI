@@ -8,6 +8,7 @@ import com.calabozoapi.crud.security.entity.Rol;
 import com.calabozoapi.crud.security.entity.Usuario;
 import com.calabozoapi.crud.security.enums.RolNombre;
 import com.calabozoapi.crud.security.jwt.JwtProvider;
+import com.calabozoapi.crud.security.repository.UsuarioRepository;
 import com.calabozoapi.crud.security.service.RolService;
 import com.calabozoapi.crud.security.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,8 @@ public class AuthController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -47,6 +50,9 @@ public class AuthController {
 
     @Autowired
     RolService rolService;
+
+    @Autowired
+    UsuarioRepository usuarioRepository;
 
     @Autowired
     JwtProvider jwtProvider;
@@ -88,16 +94,17 @@ public class AuthController {
         return new ResponseEntity<>(new Mensaje("usuario guardado"), HttpStatus.CREATED);
     }
 
-    @GetMapping("/usuarios/{id}")
-    public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable("id") Long id) {
-        Optional<Usuario> usuarioOptional = usuarioService.getById(id);
+    @GetMapping("/{id}")
+    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
         if (usuarioOptional.isPresent()) {
-            Usuario usuario = usuarioOptional.get();
-            return new ResponseEntity<>(usuario, HttpStatus.OK);
+            return new ResponseEntity<>(usuarioOptional.get(), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+
 
 
     @PutMapping("/usuarios/{id}")
