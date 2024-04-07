@@ -9,7 +9,7 @@ import java.util.Set;
 public class Usuario {
     @Id
     @GeneratedValue (strategy =  GenerationType.IDENTITY)
-    private int id;
+    private Long id; // Cambiado a Long
     @NotNull
     private String nombre;
     @NotNull
@@ -35,11 +35,11 @@ public class Usuario {
         this.password = password;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
