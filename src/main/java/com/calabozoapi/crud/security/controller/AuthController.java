@@ -123,10 +123,12 @@ public class AuthController {
 
         Set<Rol> roles = new HashSet<>();
 
-        if (nuevoUsuario.getRoles().isEmpty()) {
+        if (nuevoUsuario.getRoles() == null || nuevoUsuario.getRoles().isEmpty()) {
+            // Si no se proporcionan roles, puedes asignar un rol predeterminado
             Optional<Rol> defaultRoleOptional = rolService.getByRolNombre(RolNombre.ROLE_USER);
             defaultRoleOptional.ifPresent(roles::add);
         } else {
+            // Procesar los roles proporcionados
             for (String roleName : nuevoUsuario.getRoles()) {
                 Optional<Rol> roleOptional = rolService.getByRolNombre(RolNombre.valueOf(roleName.toUpperCase()));
                 roleOptional.ifPresent(roles::add);
@@ -138,6 +140,7 @@ public class AuthController {
 
         return new ResponseEntity<>(new Mensaje("Usuario actualizado correctamente"), HttpStatus.OK);
     }
+
 
 
 
