@@ -12,6 +12,9 @@ import com.calabozoapi.crud.security.repository.UsuarioRepository;
 import com.calabozoapi.crud.security.service.RolService;
 import com.calabozoapi.crud.security.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,6 +40,8 @@ public class AuthController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -52,16 +57,16 @@ public class AuthController {
     @Autowired
     JwtProvider jwtProvider;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
+    @PostMapping("/nuevo")
+    public ResponseEntity<?> nuevo(@Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
         if (bindingResult.hasErrors())
-            return new ResponseEntity<>(new Mensaje("Campos mal puestos o email inválido"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Mensaje("campos mal puestos o email inválido"), HttpStatus.BAD_REQUEST);
 
         if (usuarioService.existsByNombreUsuario(nuevoUsuario.getNombreUsuario()))
-            return new ResponseEntity<>(new Mensaje("Ese nombre de usuario ya existe"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Mensaje("ese nombre ya existe"), HttpStatus.BAD_REQUEST);
 
         if (usuarioService.existsByEmail(nuevoUsuario.getEmail()))
-            return new ResponseEntity<>(new Mensaje("Ese email ya está registrado"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Mensaje("ese email ya existe"), HttpStatus.BAD_REQUEST);
 
         Usuario usuario = new Usuario(
                 nuevoUsuario.getNombre(),
@@ -86,24 +91,30 @@ public class AuthController {
         usuario.setRoles(roles);
         usuarioService.save(usuario);
 
-        return new ResponseEntity<>(new Mensaje("Usuario registrado exitosamente"), HttpStatus.CREATED);
+        return new ResponseEntity<>(new Mensaje("usuario guardado"), HttpStatus.CREATED);
     }
 
-    @GetMapping("/users/{id}")
-    public ResponseEntity<Usuario> getUserById(@PathVariable Long id) {
+    @GetMapping("/usuarios/{id}")
+    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
         Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
-        return usuarioOptional.map(usuario -> new ResponseEntity<>(usuario, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        if (usuarioOptional.isPresent()) {
+            return new ResponseEntity<>(usuarioOptional.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @PutMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario) {
-        Optional<Usuario> usuarioOptional = usuarioService.getById(id);
-        if (!usuarioOptional.isPresent()) {
+
+
+
+
+    @PutMapping("/usuarios/{id}")
+    public ResponseEntity<?> actualizarUsuario(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario) {
+        if (!usuarioService.existsById(id)) {
             return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
         }
 
-        Usuario usuario = usuarioOptional.get();
+        Usuario usuario = usuarioService.getById(id).get();
 
         usuario.setNombre(nuevoUsuario.getNombre());
         usuario.setNombreUsuario(nuevoUsuario.getNombreUsuario());
@@ -128,22 +139,27 @@ public class AuthController {
         return new ResponseEntity<>(new Mensaje("Usuario actualizado correctamente"), HttpStatus.OK);
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<Usuario>> listUsers() {
+
+
+
+    @GetMapping("/usuarios")
+    public ResponseEntity<List<Usuario>> listarUsuarios() {
         List<Usuario> usuarios = usuarioService.list();
         return new ResponseEntity<>(usuarios, HttpStatus.OK);
     }
 
+
+
     @PostMapping("/login")
     public ResponseEntity<JwtDto> login(@Valid @RequestBody LoginUsuario loginUsuario, BindingResult bindingResult){
         if(bindingResult.hasErrors())
-            return new ResponseEntity<>(new Mensaje("Campos mal puestos"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(new Mensaje("campos mal puestos"), HttpStatus.BAD_REQUEST);
         Authentication authentication =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUsuario.getNombreUsuario(), loginUsuario.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtProvider.generateToken(authentication);
         UserDetails userDetails = (UserDetails)authentication.getPrincipal();
         JwtDto jwtDto = new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities());
-        return new ResponseEntity<>(jwtDto, HttpStatus.OK);
+        return new ResponseEntity(jwtDto, HttpStatus.OK);
     }
 }
