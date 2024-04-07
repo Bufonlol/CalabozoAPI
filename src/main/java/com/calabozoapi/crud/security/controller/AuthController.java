@@ -11,6 +11,9 @@ import com.calabozoapi.crud.security.jwt.JwtProvider;
 import com.calabozoapi.crud.security.service.RolService;
 import com.calabozoapi.crud.security.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -87,17 +90,16 @@ public class AuthController {
 
     @PutMapping("/usuarios/{id}")
     public ResponseEntity<?> actualizarUsuario(@PathVariable("id") Long id, @Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
-        if (bindingResult.hasErrors())
-            return new ResponseEntity<>(new Mensaje("campos mal puestos o email inválido"), HttpStatus.BAD_REQUEST);
+        if (bindingResult.hasErrors()) {
+            return new ResponseEntity<>(new Mensaje("Campos mal puestos o email inválido"), HttpStatus.BAD_REQUEST);
+        }
 
-        Optional<Usuario> usuarioOptional = usuarioService.getById(id);
-        if (!usuarioOptional.isPresent()) {
+        if (!usuarioService.existsById(id)) {
             return new ResponseEntity<>(new Mensaje("No se encontró el usuario con el ID proporcionado"), HttpStatus.NOT_FOUND);
         }
 
-        Usuario usuario = usuarioOptional.get();
+        Usuario usuario = usuarioService.getById(id).get();
 
-        // Actualizar los campos del usuario con los nuevos valores
         usuario.setNombre(nuevoUsuario.getNombre());
         usuario.setNombreUsuario(nuevoUsuario.getNombreUsuario());
         usuario.setEmail(nuevoUsuario.getEmail());
@@ -105,7 +107,6 @@ public class AuthController {
 
         Set<Rol> roles = new HashSet<>();
 
-        // Agregar los roles del nuevo usuario
         if (nuevoUsuario.getRoles().isEmpty()) {
             Optional<Rol> defaultRoleOptional = rolService.getByRolNombre(RolNombre.ROLE_USER);
             defaultRoleOptional.ifPresent(roles::add);
@@ -123,12 +124,12 @@ public class AuthController {
     }
 
 
+
     @GetMapping("/usuarios")
     public ResponseEntity<List<Usuario>> listarUsuarios() {
         List<Usuario> usuarios = usuarioService.list();
         return new ResponseEntity<>(usuarios, HttpStatus.OK);
     }
-
 
 
 
