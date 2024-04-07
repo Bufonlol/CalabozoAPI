@@ -94,7 +94,7 @@ public class AuthController {
         return new ResponseEntity<>(new Mensaje("usuario guardado"), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/usuarios/{id}")
     public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
         Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
         if (usuarioOptional.isPresent()) {
@@ -103,6 +103,7 @@ public class AuthController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
 
 
 
