@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtProvider {
@@ -29,8 +30,19 @@ public class JwtProvider {
                 .compact();
     }
 
+
+
     public String getNombreUsuarioFromToken(String token){
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        String username = claims.getSubject();
+        List<String> roles = claims.get("roles", List.class);
+        return username;
+    }
+
+    public boolean isAdmin(String token) {
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        List<String> roles = claims.get("roles", List.class);
+        return roles.contains("ROLE_ADMIN");
     }
 
     public boolean validateToken(String token){
