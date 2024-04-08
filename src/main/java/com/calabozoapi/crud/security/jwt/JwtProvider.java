@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtProvider {
@@ -23,7 +24,13 @@ public class JwtProvider {
 
     public String generateToken(Authentication authentication) {
         UsuarioPrincipal usuarioPrincipal = (UsuarioPrincipal) authentication.getPrincipal();
-        return Jwts.builder().setSubject(usuarioPrincipal.getUsername())
+        String roles = usuarioPrincipal.getAuthorities().stream()
+                .map(role -> role.getAuthority())
+                .collect(Collectors.joining(",")); // Concatenar roles separados por coma
+
+        return Jwts.builder()
+                .setSubject(usuarioPrincipal.getUsername())
+                .claim("roles", roles) // Incluir roles en la carga útil del token
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + expiration * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret)
